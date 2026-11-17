@@ -3,6 +3,7 @@ import { Vector2, type Texture } from "three";
 import { HERO_CONFIG } from "../config";
 import { coverUv, fullscreenVertex, noise } from "../glsl";
 import { useSceneMaterial, type SceneUniforms } from "../sceneState";
+import { diveFrame, diveState } from "../dive";
 
 // Nuvens passando NA FRENTE da origem da luz, só em volta da abertura no céu.
 // O formato dos tufos vem de ruído animado; a TEXTURA vem das nuvens reais do
@@ -105,7 +106,10 @@ export function FrontCloudLayer({ scene, light, sky, renderOrder }: Props) {
     };
   }, [light, sky]);
 
-  const material = useSceneMaterial(scene);
+  const baseGlow = uniforms.uGlow.value;
+  const material = useSceneMaterial(scene, (u) => {
+    u.uGlow.value = baseGlow * (diveState.active ? 1 - diveFrame(diveState.progress).beamOut : 1);
+  });
 
   return (
     <mesh frustumCulled={false} renderOrder={renderOrder}>

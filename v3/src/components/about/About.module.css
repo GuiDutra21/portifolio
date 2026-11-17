@@ -1,0 +1,214 @@
+/* Seção comum: usada no celular e com movimento reduzido. No desktop, o
+   mesmo conteúdo fica dentro do palco do hero (.stage, abaixo). */
+.about {
+  position: relative;
+  z-index: 1;
+  min-height: 100svh;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(32px, 6vw, 112px);
+  padding: clamp(72px, 12vh, 160px) var(--gutter);
+  overflow: hidden;
+  background: var(--bg);
+}
+
+/* Dentro do palco do hero: transparente sobre a cena, e só aparece o que está
+   entre as duas linhas de transformação (--line-l e --line-r, em px, vêm do
+   Hero). A borda é suave; as faíscas cobrem a emenda. */
+.stage {
+  position: absolute;
+  inset: 0;
+  min-height: 0;
+  padding-top: clamp(48px, 9vh, 120px);
+  padding-bottom: clamp(48px, 9vh, 120px);
+  background: none;
+  pointer-events: none;
+  opacity: var(--reveal-on, 0);
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent calc(var(--line-l, 50vw) - 14px),
+    #000 calc(var(--line-l, 50vw) + 22px),
+    #000 calc(var(--line-r, 50vw) - 22px),
+    transparent calc(var(--line-r, 50vw) + 14px)
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent calc(var(--line-l, 50vw) - 14px),
+    #000 calc(var(--line-l, 50vw) + 22px),
+    #000 calc(var(--line-r, 50vw) - 22px),
+    transparent calc(var(--line-r, 50vw) + 14px)
+  );
+}
+
+.ready {
+  pointer-events: auto;
+}
+
+/* ---------- Foto ---------- */
+
+.media {
+  position: relative;
+  justify-self: center;
+  width: min(100%, 30rem, 62svh);
+}
+
+/* Foto sem fundo, flutuando: o corpo some no escuro embaixo, e o ombro
+   (cortado reto na borda da imagem) se esfuma à esquerda.
+   A máscara fica no quadro, então vale para a <img> e para o canvas da
+   materialização (PhotoMaterialize). */
+.photoFrame {
+  position: relative;
+  -webkit-mask-image:
+    linear-gradient(to bottom, #000 52%, transparent 94%),
+    linear-gradient(to right, transparent 0%, #000 16%);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(to bottom, #000 52%, transparent 94%),
+    linear-gradient(to right, transparent 0%, #000 16%);
+  mask-composite: intersect;
+}
+
+.photo {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+}
+
+.photoHidden {
+  opacity: 0;
+}
+
+.photoCanvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* ---------- Texto ---------- */
+
+.text {
+  max-width: 34rem;
+}
+
+.title {
+  margin: 1.4rem 0 1.6rem;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(1.6rem, min(3.1vw, 5.4vh), 2.9rem);
+  line-height: 1.08;
+  letter-spacing: -0.025em;
+  color: var(--text);
+  text-wrap: balance;
+}
+
+.paragraph {
+  margin: 0 0 1.1rem;
+  font-size: clamp(0.95rem, min(1.05vw, 2.1vh), 1.08rem);
+  line-height: 1.7;
+  color: var(--text-dim);
+  text-wrap: pretty;
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 1.2rem 1.5rem;
+  margin: 2.2rem 0 0;
+  padding-top: 1.4rem;
+  border-top: 1px solid rgb(var(--accent-rgb) / 0.18);
+}
+
+.fact dt {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: rgb(var(--accent-rgb) / 0.7);
+}
+
+.fact dd {
+  margin: 0.45rem 0 0;
+  font-size: 0.98rem;
+  color: var(--text);
+}
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.6rem;
+  margin: 2rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.links a {
+  position: relative;
+  display: inline-flex;
+  gap: 0.4em;
+  padding-bottom: 0.3em;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text);
+  text-decoration: none;
+  transition: color 0.3s var(--ease);
+}
+
+/* sublinhado dourado que cresce no hover */
+.links a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: var(--accent);
+  transform: scaleX(0.25);
+  transform-origin: left;
+  opacity: 0.6;
+  transition: transform 0.45s var(--ease), opacity 0.3s;
+}
+
+.links a:hover,
+.links a:focus-visible {
+  color: var(--accent);
+}
+
+.links a:hover::after,
+.links a:focus-visible::after {
+  transform: scaleX(1);
+  opacity: 1;
+}
+
+.links span {
+  transition: transform 0.35s var(--ease);
+}
+
+.links a:hover span {
+  transform: translate(2px, -2px);
+}
+
+/* ---------- Celular: foto em cima, texto embaixo ---------- */
+
+@media (max-width: 860px) {
+  .about {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+    padding-top: 48px;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .media {
+    width: min(78vw, 22rem);
+  }
+
+  .text {
+    max-width: none;
+  }
+}

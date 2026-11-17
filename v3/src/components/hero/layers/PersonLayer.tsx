@@ -3,6 +3,7 @@ import { Vector2, type Texture } from "three";
 import { HERO_CONFIG } from "../config";
 import { coverUv, fullscreenVertex } from "../glsl";
 import { useSceneMaterial, type SceneUniforms } from "../sceneState";
+import { diveFrame, diveState } from "../dive";
 
 // Pessoa, mesa e objetos (com transparência), parados sobre o céu.
 // Sem a coluna de luz, viram silhueta: tons apagados e frios, com um resto de
@@ -14,6 +15,7 @@ uniform sampler2D uImage;
 uniform vec2 uRes;
 uniform vec2 uImgSize;
 uniform float uLight;
+uniform float uDim; // escurecimento do céu na transição (a pessoa some um pouco menos)
 
 ${coverUv}
 
@@ -28,6 +30,7 @@ void main() {
   vec3 silhouette = vec3(0.05, 0.06, 0.085) + pl * pl * core * vec3(0.55, 0.62, 0.85);
   vec3 color = mix(silhouette, person.rgb, uLight);
 
+  color *= 1.0 - uDim * 0.55;
   gl_FragColor = vec4(color, person.a);
 }`;
 
@@ -46,10 +49,16 @@ export function PersonLayer({ scene, image, renderOrder }: Props) {
       uImgSize: { value: new Vector2(img.width, img.height) },
       // Sem a coluna de luz, a pessoa fica em silhueta
       uLight: { value: HERO_CONFIG.light.enabled ? HERO_CONFIG.person.light : 0 },
+      uDim: { value: 0 },
     };
   }, [image]);
 
-  const material = useSceneMaterial(scene);
+  const baseLight = uniforms.uLight.value;
+  const material = useSceneMaterial(scene, (u) => {
+    const f = diveState.active ? diveFrame(diveState.progress) : null;
+    u.uLight.value = baseLight * (f ? 1 - f.beamOut * 0.85 : 1);
+    u.uDim.value = f ? f.dim : 0;
+  });
 
   return (
     <mesh frustumCulled={false} renderOrder={renderOrder}>

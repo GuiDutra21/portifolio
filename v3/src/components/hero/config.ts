@@ -14,6 +14,43 @@ export const HERO_TEXT = {
   roleSize: 1.0, // cargo (Engenheiro de IA)
 };
 
+// Transição do hero para o "Sobre mim" (a lógica está em dive.ts).
+// Ao rolar, a cena fica presa na tela: os cartões saem da espiral e viram um
+// mosaico, o feixe vira uma linha que se divide em duas, e essas linhas
+// transformam o mosaico no texto e revelam a foto.
+// As fases usam o progresso da rolagem nesse trecho (0 = início, 1 = fim).
+export const HERO_DIVE = {
+  enabled: true, // false = o hero rola normalmente e o "Sobre" vem depois
+  length: 280, // quanto se rola durante a transição, em % da altura da tela
+  // Abaixo disto (largura ou altura da tela, em px) a transição é desligada e o
+  // "Sobre" vira uma seção comum, logo abaixo do hero (celular, telas baixas).
+  minWidth: 861,
+  minHeight: 560,
+
+  darken: 0.78, // quanto o céu escurece (0 = nada, 1 = preto)
+  blur: 3, // desfoque da cena no fim, em px (para o texto ficar legível)
+  // Esteira: os cartões sobem juntos pela espiral e cada um se solta no topo.
+  exitAt: 1.0, // onde se soltam (0 = pé da espiral, 1 = topo)
+  flightLength: 0.38, // duração do voo do topo até o mosaico, medida em "espiral"
+  //                     (0.38 = o tempo de subir 38% da espiral)
+  mosaicRow: 0.058, // altura máxima dos cartões no mosaico (fração da altura da tela)
+  dissolveBand: 0.05, // largura da faixa onde os cartões se desfazem (fração da largura)
+  sparks: 2600, // quantidade de faíscas
+
+  // Fases [início, fim]
+  textOut: [0, 0.1] as [number, number], // nome e cargo saindo
+  darkIn: [0.04, 0.5] as [number, number], // céu escurecendo
+  conveyor: [0.06, 0.56] as [number, number], // esteira: do 1º cartão subindo ao último pousando
+  beamOut: [0.42, 0.6] as [number, number], // feixe de luz apagando
+  lineIn: [0.46, 0.6] as [number, number], // linha nascendo no lugar do feixe
+  split: [0.6, 0.9] as [number, number], // linhas se separando (transformação)
+  // Ritmo SÓ das linhas se separando: 1 = normal, 1.25 = 25% mais lentas
+  // (ganham mais rolagem; as outras fases não mudam, a página fica mais longa)
+  splitSlowdown: 2.5,
+  lineOut: [0.88, 0.97] as [number, number], // linhas se apagando
+  blurIn: [0.86, 1] as [number, number], // cena desfocando
+};
+
 export const HERO_ASSETS = {
   sky: "/hero/background-base.png",
   cloudMask: "/hero/cloud-mask.png",

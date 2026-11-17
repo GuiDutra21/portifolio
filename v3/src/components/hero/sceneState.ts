@@ -5,6 +5,7 @@ import {
   NoColorSpace,
   TextureLoader,
   Vector2,
+  type IUniform,
   type ShaderMaterial,
   type Texture,
 } from "three";
@@ -93,13 +94,19 @@ export function useSceneUniforms(): SceneUniforms {
 
 // Devolve a ref para o <shaderMaterial> de uma camada e, a cada frame, copia
 // o estado da cena para os uniforms dele (os que o shader declarar).
+// onFrame (opcional) recebe os uniforms do material para a camada ajustar os
+// próprios valores a cada frame (ex.: a transição para o "Sobre").
 // É preciso copiar: o R3F recria os objetos de uniform ao montar o material,
 // então números (uTime, uMotion) não ficam ligados ao estado compartilhado.
-export function useSceneMaterial(scene: SceneUniforms): RefObject<ShaderMaterial | null> {
+export function useSceneMaterial(
+  scene: SceneUniforms,
+  onFrame?: (uniforms: Record<string, IUniform>) => void,
+): RefObject<ShaderMaterial | null> {
   const material = useRef<ShaderMaterial>(null);
   useFrame(() => {
     const u = material.current?.uniforms;
     if (!u) return;
+    onFrame?.(u);
     if (u.uTime) u.uTime.value = scene.uTime.value;
     if (u.uMotion) u.uMotion.value = scene.uMotion.value;
     if (u.uPointer) u.uPointer.value.copy(scene.uPointer.value);

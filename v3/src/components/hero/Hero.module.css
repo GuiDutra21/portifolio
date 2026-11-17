@@ -1,9 +1,26 @@
-.hero {
+/* Trecho de rolagem do hero. Com o mergulho, ele é mais alto que a tela e o
+   palco fica preso (sticky) enquanto a rolagem "toca" a transição. */
+.track {
   position: relative;
+  height: calc(100svh + var(--dive, 0svh));
+  background: var(--bg);
+}
+
+.still {
+  height: 100svh;
+}
+
+.stage {
+  position: sticky;
+  top: 0;
   height: 100vh;
   height: 100svh;
   overflow: hidden;
-  background: var(--bg);
+}
+
+.scene {
+  position: absolute;
+  inset: 0;
 }
 
 .fallback,
@@ -19,6 +36,70 @@
   object-fit: cover;
 }
 
+/* ---------- Transição para o "Sobre" ---------- */
+
+/* Linhas de transformação. Nascem no lugar do feixe (do alto para baixo) e se
+   separam: --line-l / --line-r (px), --line-op e --line-grow vêm do Hero. */
+.line {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  margin-left: -1px;
+  pointer-events: none;
+  opacity: var(--line-op, 0);
+  transform: scaleY(var(--line-grow, 0));
+  transform-origin: top;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    #fff1d6 12%,
+    #fff1d6 88%,
+    transparent
+  );
+  box-shadow:
+    0 0 6px 1px rgb(255 214 160 / 0.9),
+    0 0 22px 5px rgb(255 160 70 / 0.6),
+    0 0 70px 16px rgb(240 120 40 / 0.28);
+}
+
+/* névoa laranja em volta da linha */
+.line::before {
+  content: "";
+  position: absolute;
+  top: 6%;
+  bottom: 6%;
+  left: -60px;
+  width: 122px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgb(255 150 60 / 0.16) 42%,
+    rgb(255 190 120 / 0.28) 50%,
+    rgb(255 150 60 / 0.16) 58%,
+    transparent
+  );
+  filter: blur(6px);
+}
+
+.lineL {
+  left: var(--line-l, 50%);
+}
+
+.lineR {
+  left: var(--line-r, 50%);
+}
+
+.sparks {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
 /* O R3F fixa o tamanho do <canvas> em px; aqui ele sempre acompanha o hero,
    mesmo no instante entre um redimensionamento e a próxima medição. */
 .canvas canvas {
@@ -30,7 +111,7 @@
 
 .content {
   position: absolute;
-  z-index: 1;
+  z-index: 4;
   left: clamp(24px, 7vw, 128px);
   top: 50%;
   transform: translateY(-50%);
@@ -38,9 +119,16 @@
   pointer-events: none;
 }
 
+/* saída do nome e do cargo na transição (--text-out: 0 → 1) */
+.exit {
+  opacity: calc(1 - var(--text-out, 0));
+  transform: translateY(calc(var(--text-out, 0) * -48px));
+  filter: blur(calc(var(--text-out, 0) * 8px));
+}
+
 .name {
   margin: 0;
-  font-family: "Space Grotesk Variable", system-ui, sans-serif;
+  font-family: var(--font-display);
   font-weight: 600;
   /* --name-size vem de HERO_TEXT.nameSize (config.ts) */
   font-size: calc(clamp(2.5rem, 5.6vw, 5.5rem) * var(--name-size, 1));
@@ -49,7 +137,7 @@
   color: var(--text);
   /* brilho quente bem leve, como se a luz da cena batesse no texto */
   text-shadow: 0 0 48px rgb(255 170 80 / 0.22), 0 2px 18px rgb(0 0 0 / 0.55);
-  animation: rise 1.1s cubic-bezier(0.2, 0.7, 0.2, 1) 0.3s both;
+  animation: rise 1.1s var(--ease) 0.3s both;
 }
 
 .role {
@@ -57,7 +145,7 @@
   align-items: center;
   gap: 0.9em;
   margin: 1.1rem 0 0;
-  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-family: var(--font-mono);
   font-weight: 500;
   /* --role-size vem de HERO_TEXT.roleSize (config.ts) */
   font-size: calc(clamp(0.85rem, 1.25vw, 1.15rem) * var(--role-size, 1));
@@ -65,7 +153,7 @@
   text-transform: uppercase;
   color: #f7c47d;
   text-shadow: 0 0 18px rgb(255 170 80 / 0.35), 0 1px 10px rgb(0 0 0 / 0.7);
-  animation: rise 1s cubic-bezier(0.2, 0.7, 0.2, 1) 0.75s both;
+  animation: rise 1s var(--ease) 0.75s both;
 }
 
 /* linha dourada antes do cargo */
@@ -75,7 +163,7 @@
   height: 1px;
   background: linear-gradient(90deg, transparent, #f7c47d);
   transform-origin: left;
-  animation: grow 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) 0.95s both;
+  animation: grow 0.9s var(--ease) 0.95s both;
 }
 
 @keyframes rise {

@@ -3,6 +3,7 @@ import { AdditiveBlending, Vector2, type Texture } from "three";
 import { HERO_CONFIG, cloudMotionUniforms } from "../config";
 import { cloudMotion, coverUv, fullscreenVertex, noise } from "../glsl";
 import { useSceneMaterial, type SceneUniforms } from "../sceneState";
+import { diveFrame, diveState } from "../dive";
 
 // Coluna de luz da cena original (public/hero/light-layer.png), SOMADA à cena
 // e animada sem trocar o desenho dela:
@@ -35,6 +36,7 @@ uniform float uSourceSize;
 uniform vec2 uPointer;
 uniform float uFollowTop;
 uniform float uFollowBottom;
+uniform float uFade; // 1 = acesa, 0 = apagada (transição para o "Sobre")
 
 ${coverUv}
 ${noise}
@@ -88,7 +90,9 @@ void main() {
   float where = smoothstep(0.04, 0.35, dot(light, vec3(0.33)));
   col += vec3(1.0, 0.75, 0.45) * speck * twinkle * where * uDust;
 
-  gl_FragColor = vec4(col * uIntensity, 1.0);
+  // apagando: as bordas do feixe somem antes do centro (ele "se condensa")
+  float core = exp(-pow((uv.x - uSource.x) * aspect / (0.02 + 0.3 * uFade), 2.0));
+  gl_FragColor = vec4(col * uIntensity * uFade * mix(core, 1.0, uFade), 1.0);
 }`;
 
 type Props = {
@@ -122,10 +126,13 @@ export function LightLayer({ scene, image, renderOrder }: Props) {
       uPointer: { value: new Vector2() },
       uFollowTop: { value: c.followClouds },
       uFollowBottom: { value: c.followBottom },
+      uFade: { value: 1 },
     };
   }, [image]);
 
-  const material = useSceneMaterial(scene);
+  const material = useSceneMaterial(scene, (u) => {
+    u.uFade.value = diveState.active ? 1 - diveFrame(diveState.progress).beamOut : 1;
+  });
 
   return (
     <mesh frustumCulled={false} renderOrder={renderOrder}>

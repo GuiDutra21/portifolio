@@ -1,6 +1,21 @@
 :root {
+  /* Paleta: noite azul + uma única luz âmbar (a do monitor) */
   --bg: #0b0e17;
   --text: #f4e9d8;
+  --text-dim: rgb(244 233 216 / 0.68);
+  --accent: #f7c47d;
+  --accent-rgb: 247 196 125;
+
+  /* Tipografia */
+  --font-display: "Space Grotesk Variable", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  /* Movimento: a mesma curva em todo o site */
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+
+  /* Margem lateral das seções */
+  --gutter: clamp(24px, 7vw, 128px);
+
   color-scheme: dark;
 }
 
@@ -20,4 +35,25 @@ body {
 
 #root {
   min-height: 100svh;
+}
+
+/* Rótulo de seção: "—— 01 / SOBRE MIM". Mesma linha dourada do cargo no hero. */
+.section-label {
+  display: flex;
+  align-items: center;
+  gap: 0.9em;
+  margin: 0;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: clamp(0.72rem, 0.9vw, 0.85rem);
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.section-label::before {
+  content: "";
+  width: 2.6em;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent));
 }

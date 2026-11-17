@@ -8,6 +8,7 @@ import { FrontCloudLayer } from "./layers/FrontCloudLayer";
 import { ComponentsLayer } from "./layers/ComponentsLayer";
 import { SpiralLayer } from "./layers/SpiralLayer";
 import { PersonLayer } from "./layers/PersonLayer";
+import { DimLayer } from "./layers/DimLayer";
 
 // Camadas do hero, de trás para a frente. Para adicionar uma camada nova
 // (texto, botões 3D...), crie um componente em ./layers e coloque aqui na ordem.
@@ -38,6 +39,8 @@ export function HeroScene() {
       {HERO_CONFIG.frontClouds.enabled && (
         <FrontCloudLayer scene={scene} light={light} sky={sky} renderOrder={2} />
       )}
+      {/* escurece o céu na transição para o "Sobre" (os cartões ficam por cima) */}
+      <DimLayer renderOrder={5} />
       {HERO_CONFIG.components.enabled && HERO_CONFIG.components.mode === "spiral" && (
         <SpiralLayer
           scene={scene}
