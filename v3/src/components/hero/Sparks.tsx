@@ -36,8 +36,9 @@ function draw(ctx: CanvasRenderingContext2D, w: number, h: number, dpr: number, 
 
   for (let i = 0; i < n; i++) {
     const s = i * 6;
-    const right = i % 3 !== 0; // 2/3 saindo dos cartões, 1/3 na foto
-    const rect: Rect = right ? diveState.mosaicRect : diveState.photoRect;
+    // metade de cada lado: saindo dos cartões dos dois mosaicos
+    const right = i % 2 === 0;
+    const rect: Rect = right ? diveState.mosaicRect : diveState.mosaicRectL;
     const life = LIFE * (0.6 + SEEDS[s + 3] * 0.9);
     // onde nasce: um ponto da área, do lado de fora do feixe
     const bx = rect[0] + SEEDS[s] * (rect[2] - rect[0]);

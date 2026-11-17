@@ -14,7 +14,7 @@
 // Tudo sai de diveFrame(progresso): uma função pura, usada pelo HTML (Hero.tsx),
 // pela cena WebGL (camadas) e pelas faíscas. Rolar para trás desfaz tudo.
 
-import { HERO_DIVE } from "./config";
+import { HERO_DIVE, HERO_MONITOR } from "./config";
 
 export type Rect = [number, number, number, number]; // x0, y0, x1, y1 (frações da tela)
 
@@ -22,13 +22,30 @@ export type Rect = [number, number, number, number]; // x0, y0, x1, y1 (fraçõe
 // (sem re-render do React).
 export const diveState = {
   active: false, // false = sem transição (celular, movimento reduzido)
-  progress: 0,
+  progress: 0, // hero → "Sobre"
+  monitor: 0, // "Sobre" → projetos
   beamX: 0.5, // onde fica o feixe na tela (fração da largura)
   aspect: 16 / 9, // largura / altura da tela
   textRect: [0.55, 0.2, 0.9, 0.8] as Rect, // bloco de texto do "Sobre"
   photoRect: [0.12, 0.15, 0.45, 0.85] as Rect, // foto do "Sobre"
-  mosaicRect: [0.55, 0.3, 0.9, 0.6] as Rect, // área ocupada pelos cartões no mosaico
+  mosaicRect: [0.55, 0.3, 0.9, 0.6] as Rect, // área ocupada pelos cartões no mosaico da direita (texto)
+  mosaicRectL: [0.15, 0.3, 0.4, 0.6] as Rect, // ... e no da esquerda (foto)
 };
+
+// Lado de cada cartão da espiral (de cima para baixo): alterna entre os dois
+// mosaicos, na proporção leftShare, para os dois lados encherem juntos.
+export function isLeftCard(i: number) {
+  const s = HERO_DIVE.leftShare;
+  return Math.floor((i + 1) * s) > Math.floor(i * s);
+}
+
+// Área do mosaico da esquerda: o miolo da foto (a foto some embaixo e na
+// borda esquerda, então os cartões ficam onde ela é mais forte).
+export function photoMosaicRect([x0, y0, x1, y1]: Rect): Rect {
+  const w = x1 - x0;
+  const h = y1 - y0;
+  return [x0 + w * 0.16, y0 + h * 0.1, x1 - w * 0.04, y1 - h * 0.3];
+}
 
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
 const range = (p: number, [a, b]: [number, number]) => clamp01((p - a) / (b - a));
@@ -46,9 +63,18 @@ function splitWeights() {
   return { a, b, slow, total: a + (b - a) * slow + (1 - b) };
 }
 
-// Quanto se rola durante a transição, em % da altura da tela
+// Quanto se rola durante as transições (Sobre + monitor), em % da altura da tela
 export function diveScrollLength() {
-  return HERO_DIVE.length * splitWeights().total;
+  return HERO_DIVE.length * splitWeights().total + HERO_MONITOR.length;
+}
+
+// Rolagem real do trecho preso (0..1) → progresso de cada transição (0..1):
+// p = hero → "Sobre"; m = "Sobre" → projetos (monitor)
+export function scrollToPhases(r: number) {
+  const about = HERO_DIVE.length * splitWeights().total;
+  const x = clamp01(r) * (about + HERO_MONITOR.length);
+  if (x <= about) return { p: scrollToProgress(x / about), m: 0 };
+  return { p: 1, m: (x - about) / HERO_MONITOR.length };
 }
 
 // Rolagem real (0..1) → progresso da transição (0..1)
@@ -115,7 +141,10 @@ export function flightOf(u: number, climb: number) {
 // Mosaico: os cartões em linhas justificadas, como um parágrafo, dentro do
 // bloco de texto. aspects = largura/altura de cada cartão.
 // Devolve o centro (x, y) e a altura de cada cartão, em frações da tela.
-export function mosaicSlots(aspects: number[], rect: Rect, screenAspect: number, maxRow: number) {
+// mirror = espelhado (linhas enchem da direita para a esquerda): para o
+// mosaico da esquerda, onde os cartões entram pela esquerda. Ele também fica
+// com as linhas centralizadas (com poucos cartões, justificar espalha demais).
+export function mosaicSlots(aspects: number[], rect: Rect, screenAspect: number, maxRow: number, mirror = false) {
   const [x0, y0, x1, y1] = rect;
   const w = x1 - x0;
   const h = y1 - y0;
@@ -141,7 +170,11 @@ export function mosaicSlots(aspects: number[], rect: Rect, screenAspect: number,
   let rowH = maxRow;
   let rows = flow(rowH);
   const gapY = () => rowH * 0.42;
-  while (rows.length * rowH + (rows.length - 1) * gapY() > h * 0.92 && rowH > 0.01) {
+  const widest = aspects.length ? Math.max(...aspects) : 0;
+  while (
+    (rows.length * rowH + (rows.length - 1) * gapY() > h * 0.92 || widest * rowH * toX > w) &&
+    rowH > 0.01
+  ) {
     rowH *= 0.96;
     rows = flow(rowH);
   }
@@ -154,13 +187,44 @@ export function mosaicSlots(aspects: number[], rect: Rect, screenAspect: number,
     const used = widths.reduce((acc, v) => acc + v, 0);
     const last = r === rows.length - 1 && row.length > 1;
     // justificado (a última linha fica alinhada à esquerda, como num texto)
-    const gap = row.length > 1 ? (last ? rowH * 0.28 * toX : (w - used) / (row.length - 1)) : 0;
-    let x = row.length === 1 ? x0 + (w - used) / 2 : x0;
+    const natural = rowH * 0.28 * toX;
+    const gap = row.length > 1 ? (last || mirror ? natural : (w - used) / (row.length - 1)) : 0;
+    const rowW = used + gap * (row.length - 1);
+    let x = row.length === 1 || mirror ? x0 + (w - rowW) / 2 : x0;
     row.forEach((i, k) => {
-      slots[i] = { x: x + widths[k] / 2, y, h: rowH };
+      const cx = x + widths[k] / 2;
+      slots[i] = { x: mirror ? x0 + x1 - cx : cx, y, h: rowH };
       x += widths[k] + gap;
     });
     y += rowH + gapY();
   });
   return slots;
+}
+
+// ---------- "Sobre" → projetos (monitor) ----------
+
+export type MonitorFrame = {
+  aboutOut: number; // 0..1 "Sobre" saindo
+  sceneIn: number; // 0..1 cena voltando (menos escura, sem desfoque)
+  lightOn: number; // 0..1 monitores acendendo
+  approach: number; // 0..1 câmera indo até a tela (0 = longe, 1 = a tela ocupa tudo)
+  screenOn: number; // 0..1 tela do monitor acesa
+};
+
+export function monitorFrame(m: number): MonitorFrame {
+  const d = HERO_MONITOR;
+  return {
+    aboutOut: easeOut(range(m, d.aboutOut)),
+    sceneIn: easeInOut(range(m, d.sceneIn)),
+    lightOn: easeInOut(range(m, d.lightOn)),
+    approach: easeInOut(range(m, d.zoomIn)),
+    screenOn: easeInOut(range(m, d.screenOn)),
+  };
+}
+
+// Força do feixe de luz da primeira tela: some na ida para o "Sobre" e volta
+// na ida para os projetos (1 = como na primeira tela)
+export function beamLevel() {
+  if (!diveState.active) return 1;
+  return 1 - diveFrame(diveState.progress).beamOut * (1 - monitorFrame(diveState.monitor).lightOn);
 }

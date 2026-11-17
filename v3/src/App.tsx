@@ -1,5 +1,6 @@
 import { Hero } from "./components/hero/Hero";
 import { About } from "./components/about/About";
+import { Projects } from "./components/projects/Projects";
 import { useDiveEnabled } from "./components/hero/useDiveEnabled";
 
 export default function App() {
@@ -10,6 +11,7 @@ export default function App() {
     <main>
       <Hero dive={dive} />
       {!dive && <About />}
+      <Projects afterDive={dive} />
       {/* Próximas seções do portfólio entram aqui */}
     </main>
   );

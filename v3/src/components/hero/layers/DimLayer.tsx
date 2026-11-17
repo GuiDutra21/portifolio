@@ -2,7 +2,7 @@ import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import type { ShaderMaterial } from "three";
 import { fullscreenVertex } from "../glsl";
-import { diveFrame, diveState } from "../dive";
+import { diveFrame, diveState, monitorFrame } from "../dive";
 
 // Véu escuro sobre o céu e o feixe, na transição para o "Sobre".
 // Fica ABAIXO da espiral: os cartões em voo continuam acesos.
@@ -22,7 +22,11 @@ export function DimLayer({ renderOrder }: { renderOrder: number }) {
 
   useFrame(() => {
     const u = material.current?.uniforms;
-    if (u) u.uDim.value = diveState.active ? diveFrame(diveState.progress).dim : 0;
+    if (!u) return;
+    // (transição p/ projetos) a cena volta a ser como na primeira tela
+    u.uDim.value = diveState.active
+      ? diveFrame(diveState.progress).dim * (1 - monitorFrame(diveState.monitor).sceneIn)
+      : 0;
   });
 
   return (

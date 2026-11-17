@@ -3,7 +3,7 @@ import { AdditiveBlending, Vector2, type Texture } from "three";
 import { HERO_CONFIG, cloudMotionUniforms } from "../config";
 import { cloudMotion, coverUv, fullscreenVertex, noise } from "../glsl";
 import { useSceneMaterial, type SceneUniforms } from "../sceneState";
-import { diveFrame, diveState } from "../dive";
+import { beamLevel } from "../dive";
 
 // Coluna de luz da cena original (public/hero/light-layer.png), SOMADA à cena
 // e animada sem trocar o desenho dela:
@@ -131,7 +131,7 @@ export function LightLayer({ scene, image, renderOrder }: Props) {
   }, [image]);
 
   const material = useSceneMaterial(scene, (u) => {
-    u.uFade.value = diveState.active ? 1 - diveFrame(diveState.progress).beamOut : 1;
+    u.uFade.value = beamLevel();
   });
 
   return (

@@ -1,0 +1,461 @@
+.projects {
+  position: relative;
+  z-index: 1;
+  /* título, barril e setas cabem numa tela só */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 100svh;
+  padding: clamp(28px, 5vh, 64px) 0;
+  overflow: hidden;
+  background: var(--bg);
+  isolation: isolate; /* o fundo (z-index -1) fica por trás do conteúdo, dentro da seção */
+}
+
+/* Depois da transição do monitor: a seção fica por cima da última tela do
+   hero (a tela do monitor, que já cobriu tudo) e aparece no lugar do código.
+   Até lá ela é transparente e não recebe cliques. */
+.afterDive {
+  margin-top: -100svh;
+  background: linear-gradient(to bottom, transparent 100svh, var(--bg) 100svh);
+}
+
+/* (quase zero em vez de zero: o navegador já deixa o carrossel desenhado e
+   pronto, e ele aparece sem atraso de um quadro na troca) */
+.afterDive > * {
+  opacity: max(0.002, var(--projects-in, 1));
+}
+
+:root[data-projects-ready="0"] .afterDive {
+  pointer-events: none;
+}
+
+/* depois que assumiu: fundo sólido (a miniatura do hero não aparece por trás) */
+:root[data-projects-ready="1"] .afterDive {
+  background: var(--bg);
+}
+
+/* ---------- Fundo (palco) ---------- */
+
+.ambient {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* o céu da primeira tela (só as nuvens e o mar, sem a pessoa nem a luz),
+   clareado como lá e translúcido, para não tirar a atenção dos cartões */
+.ambient::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url("/hero/background-base.png") center 65% / cover no-repeat;
+  filter: brightness(1.9) saturate(1.15);
+  opacity: 0.35;
+  mask-image: linear-gradient(to bottom, transparent, #000 18%, #000 78%, transparent);
+}
+
+.header {
+  padding: 0 var(--gutter);
+  text-align: center;
+}
+
+.header :global(.section-label) {
+  justify-content: center;
+}
+
+.title {
+  margin: 1rem 0 0;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(1.8rem, 3.4vw, 3rem);
+  letter-spacing: -0.025em;
+  color: var(--text);
+}
+
+/* ---------- Barril ---------- */
+
+.viewport {
+  position: relative;
+  height: calc(var(--card-w) * 4 / 3 + var(--lift) + 50px + var(--reflect));
+  margin-top: clamp(8px, 2vh, 24px);
+  perspective: 1800px;
+  perspective-origin: 50% 30%;
+  cursor: grab;
+  touch-action: pan-y; /* rolar a página continua funcionando no celular */
+  user-select: none;
+  outline: none;
+}
+
+.viewport:active {
+  cursor: grabbing;
+}
+
+.viewport:focus-visible {
+  box-shadow: inset 0 0 0 1px rgb(var(--accent-rgb) / 0.4);
+}
+
+/* visto um pouco de cima, como no vídeo de referência */
+.tilt {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  /* gira em torno do centro do cartão da frente */
+  transform-origin: 50% calc(var(--lift) + 20px + var(--card-w) * 2 / 3);
+  transform: rotateX(var(--tilt));
+  /* em 3D, esta "placa" ficaria na frente dos cartões e roubaria o clique:
+     só os cartões recebem o ponteiro (o arraste vem do .viewport) */
+  pointer-events: none;
+}
+
+.ring {
+  position: absolute;
+  left: 50%;
+  top: calc(var(--lift) + 20px);
+  width: 0;
+  height: 0;
+  transform-style: preserve-3d;
+}
+
+/* ---------- Cartão ---------- */
+
+.card {
+  --facing: 1;
+  position: absolute;
+  left: calc(var(--card-w) / -2);
+  top: 0;
+  width: var(--card-w);
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  border-radius: 0;
+  border: 1px solid rgb(var(--accent-rgb) / 0.22);
+  background: #0e1220;
+  /* reflexo no "chão", apagando logo abaixo do cartão (Chrome/Safari) */
+  -webkit-box-reflect: below 6px linear-gradient(transparent 80%, rgb(0 0 0 / 0.16));
+  /* o verso fica visível: os cartões de trás aparecem por cima, escurecidos */
+  backface-visibility: visible;
+  pointer-events: auto;
+  cursor: pointer;
+  transition: border-color 0.4s var(--ease), box-shadow 0.4s var(--ease);
+}
+
+/* o da frente "acende", como os cartões da espiral */
+.front {
+  border-color: rgb(var(--accent-rgb) / 0.6);
+  box-shadow:
+    0 0 0 1px rgb(var(--accent-rgb) / 0.15),
+    0 0 40px rgb(255 160 70 / 0.18),
+    0 30px 60px rgb(0 0 0 / 0.45);
+}
+
+.cardImg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+  transition: transform 0.8s var(--ease);
+}
+
+.front:hover .cardImg {
+  transform: scale(1.04);
+}
+
+/* texto sobre a parte de baixo da imagem, com um escuro atrás para ler bem */
+.cardBody {
+  position: absolute;
+  inset: auto 0 0;
+  padding: 3.2rem 1.25rem 1.15rem;
+  /* o texto some nos cartões de lado / de costas (ficaria espelhado) */
+  opacity: clamp(0, calc(var(--facing) * 2.2 - 0.4), 1);
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgb(8 10 18 / 0.82) 32%,
+    rgb(8 10 18 / 0.95)
+  );
+}
+
+.cardIndex {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.24em;
+  color: var(--accent);
+}
+
+.cardTitle {
+  margin: 0.35rem 0 0.4rem;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(1.15rem, 1.5vw, 1.45rem);
+  letter-spacing: -0.015em;
+  color: var(--text);
+}
+
+.cardSummary {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: var(--text-dim);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.cardLinks {
+  display: flex;
+  flex-wrap: nowrap; /* os dois links sempre na mesma linha */
+  align-items: center;
+  gap: 0.6rem 1rem;
+  margin-top: 0.95rem;
+}
+
+.cardLinks a {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  white-space: nowrap;
+  text-transform: uppercase;
+  color: var(--text);
+  text-decoration: none;
+  transition: color 0.25s var(--ease);
+}
+
+.cardLinks a:hover,
+.cardLinks a:focus-visible {
+  color: var(--accent);
+}
+
+
+/* cartões de lado ficam mais escuros */
+.cardShade {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: #05070c;
+  /* frente: 0 · de lado: ~0.55 · de costas: ~0.72 */
+  opacity: min(0.72, calc((1 - var(--facing)) * 0.55));
+}
+
+/* links só clicáveis no cartão da frente */
+.card:not(.front) .cardLinks {
+  pointer-events: none;
+}
+
+/* ---------- Controles ---------- */
+
+.controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1.4rem;
+  margin-top: 0;
+}
+
+.arrow {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid rgb(var(--accent-rgb) / 0.35);
+  background: rgb(14 18 32 / 0.6);
+  color: var(--text);
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: border-color 0.25s var(--ease), color 0.25s var(--ease);
+}
+
+.arrow:hover,
+.arrow:focus-visible {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.counter {
+  min-width: 5.5em;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  letter-spacing: 0.24em;
+  color: var(--text-dim);
+}
+
+.hint {
+  margin: 0.6rem 0 0;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgb(244 233 216 / 0.38);
+}
+
+/* ---------- Chips (os mesmos ícones da espiral) ---------- */
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
+  padding: 0.35em 0.75em;
+  border-radius: 999px;
+  border: 1px solid rgb(var(--accent-rgb) / 0.35);
+  background: rgb(14 18 32 / 0.7);
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: rgb(255 222 170);
+}
+
+.chip svg {
+  width: 1em;
+  height: 1em;
+  fill: rgb(255 170 80);
+}
+
+/* ---------- Painel aberto ---------- */
+
+.modalRoot {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+}
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgb(5 7 12 / 0.72);
+  backdrop-filter: blur(8px);
+}
+
+.panel {
+  position: relative;
+  width: min(980px, 100%);
+  max-height: calc(100svh - 32px);
+  overflow: hidden auto;
+  border-radius: 20px;
+  border: 1px solid rgb(var(--accent-rgb) / 0.5);
+  background: #0e1220;
+  box-shadow:
+    0 0 60px rgb(255 160 70 / 0.16),
+    0 40px 100px rgb(0 0 0 / 0.6);
+  transform-origin: center;
+}
+
+.panelMedia {
+  position: relative;
+  aspect-ratio: 16 / 8;
+  overflow: hidden;
+}
+
+.panelMedia img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.panelMedia::after {
+  content: "";
+  position: absolute;
+  inset: 40% 0 0;
+  background: linear-gradient(to bottom, transparent, #0e1220);
+}
+
+.panelBody {
+  padding: 0.5rem clamp(20px, 4vw, 48px) clamp(24px, 4vw, 44px);
+}
+
+.panelTitle {
+  margin: 0 0 1rem;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+
+.panelText {
+  max-width: 62ch;
+  margin: 0 0 1rem;
+  line-height: 1.7;
+  color: var(--text-dim);
+}
+
+.panelBody .chips {
+  margin: 1.4rem 0 1.8rem;
+}
+
+.panelLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+}
+
+.primary,
+.secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  padding: 0.85em 1.4em;
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: background 0.25s var(--ease), color 0.25s var(--ease), border-color 0.25s var(--ease);
+}
+
+.primary {
+  background: var(--accent);
+  color: #1a1206;
+}
+
+.primary:hover,
+.primary:focus-visible {
+  background: #ffd9a3;
+}
+
+.secondary {
+  border: 1px solid rgb(var(--accent-rgb) / 0.5);
+  color: var(--text);
+}
+
+.secondary:hover,
+.secondary:focus-visible {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid rgb(var(--accent-rgb) / 0.4);
+  background: rgb(8 10 18 / 0.7);
+  color: var(--text);
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.close:hover,
+.close:focus-visible {
+  border-color: var(--accent);
+  color: var(--accent);
+}

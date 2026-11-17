@@ -3,7 +3,7 @@ import { Vector2, type Texture } from "three";
 import { HERO_CONFIG } from "../config";
 import { coverUv, fullscreenVertex } from "../glsl";
 import { useSceneMaterial, type SceneUniforms } from "../sceneState";
-import { diveFrame, diveState } from "../dive";
+import { diveFrame, diveState, monitorFrame } from "../dive";
 
 // Pessoa, mesa e objetos (com transparência), parados sobre o céu.
 // Sem a coluna de luz, viram silhueta: tons apagados e frios, com um resto de
@@ -56,8 +56,10 @@ export function PersonLayer({ scene, image, renderOrder }: Props) {
   const baseLight = uniforms.uLight.value;
   const material = useSceneMaterial(scene, (u) => {
     const f = diveState.active ? diveFrame(diveState.progress) : null;
-    u.uLight.value = baseLight * (f ? 1 - f.beamOut * 0.85 : 1);
-    u.uDim.value = f ? f.dim : 0;
+    // (transição p/ projetos) o feixe volta e a pessoa fica iluminada como na primeira tela
+    const m = diveState.active ? monitorFrame(diveState.monitor) : null;
+    u.uLight.value = baseLight * (f && m ? 1 - 0.85 * f.beamOut * (1 - m.lightOn) : 1);
+    u.uDim.value = f && m ? f.dim * (1 - m.lightOn) : 0;
   });
 
   return (

@@ -34,6 +34,7 @@ export const HERO_DIVE = {
   flightLength: 0.38, // duração do voo do topo até o mosaico, medida em "espiral"
   //                     (0.38 = o tempo de subir 38% da espiral)
   mosaicRow: 0.058, // altura máxima dos cartões no mosaico (fração da altura da tela)
+  leftShare: 0.42, // parte dos cartões que vai para a esquerda (sobre a foto); o resto vai para a direita (texto)
   dissolveBand: 0.05, // largura da faixa onde os cartões se desfazem (fração da largura)
   sparks: 2600, // quantidade de faíscas
 
@@ -49,6 +50,28 @@ export const HERO_DIVE = {
   splitSlowdown: 2.5,
   lineOut: [0.88, 0.97] as [number, number], // linhas se apagando
   blurIn: [0.86, 1] as [number, number], // cena desfocando
+};
+
+// Transição do "Sobre" para os "Projetos" (depois da de cima, no mesmo trecho
+// preso): o "Sobre" sai, os monitores da mesa acendem, a câmera se aproxima e
+// a tela do monitor cresce, vindo para o centro, até cobrir tudo: por dentro
+// dela está a seção de projetos ("entrar no monitor").
+// As fases usam o progresso SÓ deste trecho (0 = início, 1 = fim).
+export const HERO_MONITOR = {
+  length: 110, // quanto se rola neste trecho, em % da altura da tela
+  focus: [0.524, 0.826] as [number, number], // centro da tela do monitor (x, y na imagem do céu)
+  screen: [0.0295, 0.04] as [number, number], // tamanho da tela do monitor (largura, altura na imagem)
+  blur: 0.9, // desfoque da cena em volta enquanto a câmera chega na tela (em px da imagem; 0 = sem)
+  darken: 0.35, // quanto a cena em volta escurece no fim da aproximação (0 = nada)
+
+  // Fases [início, fim]
+  aboutOut: [0, 0.18] as [number, number], // "Sobre" saindo
+  sceneIn: [0.04, 0.3] as [number, number], // cena voltando (sem o escuro e sem desfoque)
+  lightOn: [0.04, 0.32] as [number, number], // feixe de luz voltando, como na primeira tela (e a pessoa iluminada)
+  // câmera indo até a tela do monitor (a cena e a tela juntas, como uma coisa
+  // só); no fim a tela ocupa tudo e vira a seção de projetos de verdade
+  zoomIn: [0.1, 1] as [number, number],
+  screenOn: [0.22, 0.36] as [number, number], // tela do monitor acendendo, já com os projetos em miniatura
 };
 
 export const HERO_ASSETS = {
@@ -211,9 +234,9 @@ export const HERO_CONFIG = {
     lineBackDim: 0.6, // brilho da parte da linha que passa atrás (1 = igual à da frente)
 
     // ===== Itens da espiral (de cima para baixo) =====
-    // Painéis da arte original: "html", "code", "github", "phone", "diagram", "mini", "db"
     // Cartões de tecnologia (ícone + nome): qualquer chave de TECHS em techs.ts,
-    //   ex.: "python", "react", "fastapi", "docker", "typescript", "postgresql"...
+    //   ex.: "python", "react", "fastapi", "docker", "typescript", "github"...
+    // Painéis da arte original (só o desenho): "html", "code", "phone", "diagram", "mini", "db"
     items: [
       "python",
       "fastapi",

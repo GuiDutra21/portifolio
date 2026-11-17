@@ -19,7 +19,7 @@ import {
   type Texture,
 } from "three";
 import { HERO_CONFIG, HERO_DIVE } from "../config";
-import { conveyorClimb, diveFrame, diveState, flightOf, mosaicSlots } from "../dive";
+import { conveyorClimb, diveFrame, diveState, flightOf, isLeftCard, mosaicSlots, photoMosaicRect, type Rect } from "../dive";
 import { noise } from "../glsl";
 import PANELS from "../panels.json";
 import { useTechCards } from "../techs";
@@ -101,14 +101,15 @@ void main() {
 // onde a linha já passou, o painel se desfaz em "pixels" de 3 px, numa faixa
 // de largura uBand; perto da borda que ainda resta, ele esquenta (âmbar).
 const dissolve = /* glsl */ `
-uniform float uLineX;  // posição da linha (fração da largura); < 0 = desligada
+uniform float uLineX;  // posição da linha (fração da largura)
+uniform float uDir;    // 1 = linha andando para a direita, -1 = para a esquerda, 0 = desligada
 uniform float uBand;
 uniform vec2 uRes;
 ${noise}
 // > 0: já se desfez (descartar). Entre -1 e 0: borda quente.
 float dissolveAmount() {
-  if (uLineX < 0.0) return -2.0;
-  float behind = (uLineX - gl_FragCoord.x / uRes.x) / uBand;
+  if (uDir == 0.0) return -2.0;
+  float behind = uDir * (uLineX - gl_FragCoord.x / uRes.x) / uBand;
   float n = hash(floor(gl_FragCoord.xy / 3.0));
   return behind - n;
 }`;
@@ -161,7 +162,8 @@ void main() {
 }`;
 
 const dissolveUniforms = () => ({
-  uLineX: { value: -1 },
+  uLineX: { value: 0 },
+  uDir: { value: 0 },
   uBand: { value: HERO_DIVE.dissolveBand },
   uRes: { value: new Vector2(1, 1) },
 });
@@ -248,6 +250,12 @@ export function SpiralLayer({ scene, panels, shade, imgSize, compAspect, renderO
     const full = new Vector4(0, 0, 1, 1);
     const items = c.items
       .map((key) => {
+        // cartão de tecnologia (ícone + nome) primeiro; senão, painel da arte
+        const card = techCards[key];
+        if (card) {
+          const h = c.techCardHeight * c.panelScale;
+          return { width: h * card.aspect, height: h, glowTex: card.glow, shadeTex: card.shade, uvRect: full };
+        }
         const panel = PANELS.find((p) => p.name === key);
         if (panel) {
           const [x0, y0, x1, y1] = panel.rect;
@@ -258,11 +266,6 @@ export function SpiralLayer({ scene, panels, shade, imgSize, compAspect, renderO
             shadeTex: shade,
             uvRect: new Vector4(...panel.atlas),
           };
-        }
-        const card = techCards[key];
-        if (card) {
-          const h = c.techCardHeight * c.panelScale;
-          return { width: h * card.aspect, height: h, glowTex: card.glow, shadeTex: card.shade, uvRect: full };
         }
         return null;
       })
@@ -322,28 +325,50 @@ export function SpiralLayer({ scene, panels, shade, imgSize, compAspect, renderO
 
     // Transição para o "Sobre" (dive.ts)
     const f = diveFrame(diveState.active ? diveState.progress : 0);
-    const lineX = diveState.active && f.splitting ? f.lineR : -1;
-    const slots = diveState.active
-      ? mosaicSlots(
-          layout.map((it) => it.aspect),
-          diveState.textRect,
-          size.width / size.height,
-          HERO_DIVE.mosaicRow,
-        )
-      : null;
+    const splitting = diveState.active && f.splitting;
+    // Dois mosaicos: os cartões se alternam entre a direita (onde vai o texto)
+    // e a esquerda (onde vai a foto). Cada linha desfaz o seu.
+    const left = layout.map((_, i) => isLeftCard(i));
+    let slots: { x: number; y: number; h: number }[] | null = null;
+    if (diveState.active) {
+      const sa = size.width / size.height;
+      const idxR = layout.map((_, i) => i).filter((i) => !left[i]);
+      const idxL = layout.map((_, i) => i).filter((i) => left[i]);
+      const sR = mosaicSlots(idxR.map((i) => layout[i].aspect), diveState.textRect, sa, HERO_DIVE.mosaicRow);
+      const sL = mosaicSlots(
+        idxL.map((i) => layout[i].aspect),
+        photoMosaicRect(diveState.photoRect),
+        sa,
+        HERO_DIVE.mosaicRow,
+        true,
+      );
+      // os dois mosaicos na mesma altura: o da esquerda se alinha ao centro do da direita
+      const middle = (ss: { y: number; h: number }[]) =>
+        ss.length ? (Math.min(...ss.map((s) => s.y - s.h / 2)) + Math.max(...ss.map((s) => s.y + s.h / 2))) / 2 : 0;
+      if (sR.length && sL.length) {
+        const dy = middle(sR) - middle(sL);
+        sL.forEach((s) => (s.y += dy));
+      }
+      const all: { x: number; y: number; h: number }[] = new Array(layout.length);
+      idxR.forEach((i, k) => (all[i] = sR[k]));
+      idxL.forEach((i, k) => (all[i] = sL[k]));
+      slots = all;
 
-    if (slots) {
-      // área do mosaico, para as faíscas nascerem de onde estão os cartões
-      const mr = diveState.mosaicRect;
-      mr[0] = mr[1] = 1;
-      mr[2] = mr[3] = 0;
-      slots.forEach((sl, i) => {
-        const hw = (sl.h * layout[i].aspect * size.height) / size.width / 2;
-        mr[0] = Math.min(mr[0], sl.x - hw);
-        mr[2] = Math.max(mr[2], sl.x + hw);
-        mr[1] = Math.min(mr[1], sl.y - sl.h / 2);
-        mr[3] = Math.max(mr[3], sl.y + sl.h / 2);
-      });
+      // área de cada mosaico, para as faíscas nascerem de onde estão os cartões
+      const bounds = (mr: Rect, idx: number[]) => {
+        mr[0] = mr[1] = 1;
+        mr[2] = mr[3] = 0;
+        idx.forEach((i) => {
+          const sl = all[i];
+          const hw = (sl.h * layout[i].aspect * size.height) / size.width / 2;
+          mr[0] = Math.min(mr[0], sl.x - hw);
+          mr[2] = Math.max(mr[2], sl.x + hw);
+          mr[1] = Math.min(mr[1], sl.y - sl.h / 2);
+          mr[3] = Math.max(mr[3], sl.y + sl.h / 2);
+        });
+      };
+      bounds(diveState.mosaicRect, idxR);
+      bounds(diveState.mosaicRectL, idxL);
     }
 
     // Esteira: todos sobem juntos; a linha é recolhida atrás do último cartão
@@ -385,8 +410,9 @@ export function SpiralLayer({ scene, panels, shade, imgSize, compAspect, renderO
         const depth = placeOnHelix(p.u + climb, float);
         bright = c.backDim + (1 - c.backDim) * depth;
       } else {
-        // Voo do topo até o mosaico, CONTORNANDO o mosaico pela direita (para não
-        // passar por cima dos cartões que já pousaram):
+        // Voo do topo até o mosaico, CONTORNANDO o mosaico por fora (para não
+        // passar por cima dos cartões que já pousaram). Para o da direita
+        // (o da esquerda faz o mesmo caminho espelhado):
         //   topo da espiral → W1 (acima e à direita do mosaico)
         //   → W2 (desce pela lateral até a altura da sua linha)
         //   → vaga (entra pela direita, onde ainda não pousou ninguém: as vagas
@@ -404,14 +430,18 @@ export function SpiralLayer({ scene, panels, shade, imgSize, compAspect, renderO
         tmp.m.decompose(tmp.prev, tmp.quat, tmp.scl);
 
         const slot = slots[i];
-        const mr = diveState.mosaicRect;
+        const isL = left[i];
+        const side = isL ? -1 : 1; // lado de fora do mosaico
+        const mr = isL ? diveState.mosaicRectL : diveState.mosaicRect;
         const toWorld = (out: Vector3, sx: number, sy: number) =>
           out.set((sx - 0.5) * vp.width, -(sy - 0.5) * vp.height, 0);
         // meia largura do cartão já pousado (fração da tela): o corredor da
         // direita fica afastado o bastante para ele não raspar no mosaico
         const halfW = (slot.h * p.aspect * size.height) / size.width / 2;
         // (com folga: em voo o cartão vem mais perto da câmera e parece maior)
-        const rx = Math.min(1 - halfW * 1.35 - 0.01, mr[2] + halfW + 0.02); // sem sair da tela
+        const rx = isL
+          ? Math.max(halfW * 1.35 + 0.01, mr[0] - halfW - 0.02)
+          : Math.min(1 - halfW * 1.35 - 0.01, mr[2] + halfW + 0.02); // sem sair da tela
         toWorld(tmp.w1, rx, mr[1] - slot.h * 1.2);
         toWorld(tmp.w2, rx, slot.y);
         toWorld(tmp.p3, slot.x, slot.y);
@@ -441,9 +471,9 @@ export function SpiralLayer({ scene, panels, shade, imgSize, compAspect, renderO
           tmp.c2.copy(tmp.w2).setY(tmp.w2.y + bend * 0.5);
           bezier(tmp.pos, tmp.w1, tmp.c1, tmp.c2, tmp.w2, (e - f1) / f2);
         } else {
-          // 3) curva para a esquerda e entra na vaga pela direita
+          // 3) curva para dentro e entra na vaga pelo lado de fora
           tmp.c1.copy(tmp.w2).setY(tmp.w2.y - bend * 0.5);
-          tmp.c2.copy(tmp.p3).setX(tmp.p3.x + bend * 1.2);
+          tmp.c2.copy(tmp.p3).setX(tmp.p3.x + side * bend * 1.2);
           bezier(tmp.pos, tmp.w2, tmp.c1, tmp.c2, tmp.p3, (e - f1 - f2) / (1 - f1 - f2 || 1));
         }
         // um pouco mais perto da câmera durante o voo (passa na frente de tudo)
@@ -462,7 +492,9 @@ export function SpiralLayer({ scene, panels, shade, imgSize, compAspect, renderO
       glowMat.uniforms.uBright.value = bright;
       for (const mat of [glowMat, plateMat]) {
         if (!mat) continue;
-        mat.uniforms.uLineX.value = lineX;
+        // cada cartão é desfeito pela linha do seu lado
+        mat.uniforms.uLineX.value = left[i] ? f.lineL : f.lineR;
+        mat.uniforms.uDir.value = splitting ? (left[i] ? -1 : 1) : 0;
         mat.uniforms.uRes.value.copy(scene.uRes.value);
       }
     });

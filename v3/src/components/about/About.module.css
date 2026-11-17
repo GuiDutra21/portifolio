@@ -24,7 +24,10 @@
   padding-bottom: clamp(48px, 9vh, 120px);
   background: none;
   pointer-events: none;
-  opacity: var(--reveal-on, 0);
+  /* some na transição para os projetos (--about-out: 0 → 1) */
+  opacity: calc(var(--reveal-on, 0) * (1 - var(--about-out, 0)));
+  translate: 0 calc(var(--about-out, 0) * -32px);
+  filter: blur(calc(var(--about-out, 0) * 6px));
   -webkit-mask-image: linear-gradient(
     to right,
     transparent calc(var(--line-l, 50vw) - 14px),

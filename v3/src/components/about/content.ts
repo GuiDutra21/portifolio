@@ -1,11 +1,13 @@
 // Textos da seção "Sobre mim". Edite à vontade: o layout se ajusta.
 // Itens entre [colchetes] são para você preencher.
 
+import { ABOUT_CONFIG } from "./config";
+
 export const ABOUT = {
   index: "01",
   label: "Sobre mim",
 
-  photo: "/about/photo.webp", // gerada por tools/build_about_photo.py
+  photo: ABOUT_CONFIG.photo, // qual foto: em src/components/about/config.ts
   photoAlt: "Foto de Guilherme Silva Dutra",
 
   // Frase de abertura (não precisa repetir o nome: ele já está no hero)
