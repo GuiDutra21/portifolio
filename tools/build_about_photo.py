@@ -11,7 +11,7 @@ As fotos ficam cruas (cores originais). O único ajuste é o escurecimento da
 parte de baixo, para a pessoa parecer flutuar no escuro (o site ainda esfuma a
 borda de baixo com uma máscara, em About.module.css).
 
-Uso (dentro de v3/):  python tools/build_about_photo.py
+Uso (na raiz do repositório):  python tools/build_about_photo.py
 """
 
 from pathlib import Path

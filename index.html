@@ -1,20 +1,13 @@
 <!doctype html>
 <html lang="pt-BR">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Portfólio</title>
-  <link rel="stylesheet" href="styles.css" />
-</head>
-<body>
-  <main>
-    <section class="hero" aria-label="Início">
-      <!-- Fallback estático: aparece se o WebGL não estiver disponível -->
-      <img class="hero__fallback" src="assets/hero.png" alt="" />
-      <canvas class="hero__canvas" aria-hidden="true"></canvas>
-    </section>
-  </main>
-
-  <script type="module" src="js/clouds.js"></script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Guilherme Dutra · Portfólio</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
 </html>

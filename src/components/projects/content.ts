@@ -1,6 +1,5 @@
 // Projetos do carrossel. Edite à vontade: textos, imagens, tags e links.
-// Tudo entre [colchetes] é PROVISÓRIO; as imagens também
-// (geradas por tools/build_project_placeholders.py).
+// Tudo entre [colchetes] é PROVISÓRIO.
 // tags: chaves de TECHS em src/components/hero/techs.ts (os mesmos ícones da espiral).
 
 export type Project = {

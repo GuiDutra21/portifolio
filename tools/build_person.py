@@ -12,7 +12,7 @@ Recorte: o fundo preto é o que se liga à borda da imagem por pixels escuros
 (o contorno iluminado da pessoa e da mesa segura); os vãos pretos embaixo da
 mesa também são fundo; o chão iluminado vira luz.
 
-Uso (dentro de v3/):  python tools/build_person.py
+Uso (na raiz do repositório):  python tools/build_person.py
 """
 
 import json
