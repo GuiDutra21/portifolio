@@ -2,6 +2,7 @@ import { Hero } from "./components/hero/Hero";
 import { About } from "./components/about/About";
 import { Projects } from "./components/projects/Projects";
 import { useDiveEnabled } from "./components/hero/useDiveEnabled";
+import { Nav } from "./components/nav/Nav";
 
 export default function App() {
   // Desktop: o "Sobre" nasce dentro do hero (transição na rolagem).
@@ -9,6 +10,7 @@ export default function App() {
   const dive = useDiveEnabled();
   return (
     <main>
+      <Nav dive={dive} />
       <Hero dive={dive} />
       {!dive && <About />}
       <Projects afterDive={dive} />

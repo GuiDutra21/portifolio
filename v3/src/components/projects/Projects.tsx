@@ -38,12 +38,12 @@ function useBarrelSize() {
 }
 // O conjunto (título + barril + setas) precisa caber inteiro na altura da tela.
 const LIFT_RATIO = 2 * (0.5 / Math.tan(Math.PI / FACES) + 0.06) * Math.sin((TILT * Math.PI) / 180) * 0.62;
-const CHROME = 330; // px fora dos cartões: título, setas, dica e espaços
+const CHROME = 330; // px fora dos cartões: título, setas, dica e espaços (+40 no celular, pelo menu)
 const REFLECT = 0.16; // espaço para o reflexo embaixo dos cartões (fração da largura do cartão)
 function measure() {
   const vw = window.innerWidth;
   const byWidth = vw < 720 ? vw * 0.62 : vw * 0.22;
-  const byHeight = (window.innerHeight - CHROME) / (4 / 3 + LIFT_RATIO + REFLECT);
+  const byHeight = (window.innerHeight - CHROME - (vw < 720 ? 40 : 0)) / (4 / 3 + LIFT_RATIO + REFLECT);
   const card = Math.round(Math.min(380, Math.max(170, Math.min(byWidth, byHeight))));
   const radius = Math.round(card / 2 / Math.tan(Math.PI / FACES) + card * 0.06);
   // quanto os cartões de trás sobem acima dos da frente (com a perspectiva)
@@ -66,10 +66,15 @@ export function Projects({ afterDive = false, preview = false }: Props) {
   // Gira o barril e ajusta cada cartão conforme está de frente ou de lado
   const render = useCallback(
     (r: number) => {
-      if (ring.current) ring.current.style.transform = `translateZ(${-radius}px) rotateY(${r}deg)`;
+      // O giro vai em cada cartão, e não no anel: com o anel girado em 90° /
+      // 270° o Chrome deixava de acertar o clique nos cartões dentro dele (o
+      // 3º projeto, que fica nesses ângulos, não abria).
+      if (ring.current) ring.current.style.transform = `translateZ(${-radius}px)`;
       cards.current.forEach((el, i) => {
         if (!el) return;
-        const facing = Math.cos(((i * STEP + r) * Math.PI) / 180); // 1 = de frente
+        const angle = i * STEP + r;
+        el.style.transform = `rotateY(${angle}deg) translateZ(${radius}px)`;
+        const facing = Math.cos((angle * Math.PI) / 180); // 1 = de frente
         el.style.setProperty("--facing", facing.toFixed(3));
       });
     },
@@ -255,27 +260,37 @@ export function Projects({ afterDive = false, preview = false }: Props) {
                     cards.current[face] = el;
                   }}
                   className={`${styles.card} ${isFront ? styles.front : ""}`}
-                  style={{ transform: `rotateY(${face * STEP}deg) translateZ(${radius}px)` }}
                   onClick={() => onCardClick(face, project)}
                   onPointerEnter={onCardEnter}
                   onPointerLeave={onCardLeave}
                   aria-hidden={!isFront}
                   data-front={isFront}
                 >
-                  <img className={styles.cardImg} src={project.image} alt={project.imageAlt} draggable={false} />
+                  <img
+                    className={styles.cardImg}
+                    src={project.image}
+                    alt={project.imageAlt}
+                    style={{ objectPosition: project.imagePosition }}
+                    draggable={false}
+                  />
                   <div className={styles.cardBody}>
                     <span className={styles.cardIndex}>
                       {String((face % PROJECTS.length) + 1).padStart(2, "0")}
                     </span>
+                    {project.status && <span className={styles.status}>{project.status}</span>}
                     <h3 className={styles.cardTitle}>{project.title}</h3>
                     <p className={styles.cardSummary}>{project.summary}</p>
                     <div className={styles.cardLinks}>
-                      <a href={project.links.live} target="_blank" rel="noreferrer" tabIndex={isFront ? 0 : -1}>
-                        Ver projeto <span aria-hidden="true">↗</span>
-                      </a>
-                      <a href={project.links.code} target="_blank" rel="noreferrer" tabIndex={isFront ? 0 : -1}>
-                        Código <span aria-hidden="true">↗</span>
-                      </a>
+                      {project.links.live && (
+                        <a href={project.links.live} target="_blank" rel="noreferrer" tabIndex={isFront ? 0 : -1}>
+                          Ver projeto <span aria-hidden="true">↗</span>
+                        </a>
+                      )}
+                      {project.links.code && (
+                        <a href={project.links.code} target="_blank" rel="noreferrer" tabIndex={isFront ? 0 : -1}>
+                          Código <span aria-hidden="true">↗</span>
+                        </a>
+                      )}
                     </div>
                   </div>
                   {/* escurece os cartões que estão de lado */}
@@ -304,6 +319,7 @@ export function Projects({ afterDive = false, preview = false }: Props) {
         <ProjectModal
           project={open.project}
           from={open.from}
+          getFrom={() => cards.current[open.face]?.getBoundingClientRect()}
           onClose={() => {
             const face = open.face;
             setOpen(null);

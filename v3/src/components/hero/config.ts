@@ -12,6 +12,12 @@ export const HERO_TEXT = {
   // O tamanho já se adapta à largura da tela; isto multiplica por cima.
   nameSize: 0.75, // seu nome
   roleSize: 1.0, // cargo (Engenheiro de IA)
+  // Links abaixo do cargo. O currículo fica em public/curriculo.pdf.
+  links: [
+    { label: "GitHub", href: "https://github.com/GuiDutra21" },
+    { label: "LinkedIn", href: "https://www.linkedin.com/in/dutragui21" },
+    { label: "Currículo", href: "/curriculo.pdf" },
+  ],
 };
 
 // Transição do hero para o "Sobre mim" (a lógica está em dive.ts).
@@ -58,10 +64,16 @@ export const HERO_DIVE = {
 // dela está a seção de projetos ("entrar no monitor").
 // As fases usam o progresso SÓ deste trecho (0 = início, 1 = fim).
 export const HERO_MONITOR = {
+  // Pausa no "Sobre": depois que ele aparece inteiro, rola-se este tanto (em %
+  // da altura da tela) sem nenhuma animação, para dar para ler com calma.
+  // Rolando para cima ou para baixo além disso, as animações continuam.
+  // 0 = sem pausa. O botão "Sobre" do menu para no meio desta pausa.
+  aboutHold: 90,
   length: 110, // quanto se rola neste trecho, em % da altura da tela
   focus: [0.524, 0.826] as [number, number], // centro da tela do monitor (x, y na imagem do céu)
   screen: [0.0295, 0.04] as [number, number], // tamanho da tela do monitor (largura, altura na imagem)
   blur: 0.9, // desfoque da cena em volta enquanto a câmera chega na tela (em px da imagem; 0 = sem)
+  centerBy: 0.85, // em que ponto da aproximação o monitor já está no centro da tela (1 = só no fim)
   darken: 0.35, // quanto a cena em volta escurece no fim da aproximação (0 = nada)
 
   // Fases [início, fim]
@@ -71,7 +83,7 @@ export const HERO_MONITOR = {
   // câmera indo até a tela do monitor (a cena e a tela juntas, como uma coisa
   // só); no fim a tela ocupa tudo e vira a seção de projetos de verdade
   zoomIn: [0.1, 1] as [number, number],
-  screenOn: [0.22, 0.36] as [number, number], // tela do monitor acendendo, já com os projetos em miniatura
+  screenOn: [0.5, 0.6] as [number, number], // tela do monitor acendendo (já com os projetos em miniatura), com a câmera bem perto
 };
 
 export const HERO_ASSETS = {
@@ -242,14 +254,19 @@ export const HERO_CONFIG = {
       "fastapi",
       "typescript",
       "react",
+      "grpc",
       "nestjs",
       "springBoot",
       "flutter",
+      "firebase",
       "postgresql",
+      "mysql",
       "docker",
       "kubernetes",
       "gcp",
+      "aws",
       "github",
+      "figma",
     ],
     techCardHeight: 0.064, // altura dos cartões de tecnologia (frações da altura da espiral)
     techFontSize: 1.0, // tamanho do nome nos cartões (1 = padrão, 1.2 = maior). O ícone não muda

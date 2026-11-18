@@ -54,14 +54,18 @@ export function Hero({ dive }: Props) {
     // zoom: de 1 até a tela do monitor ter a largura da tela
     const zoomEnd = W / mon.w;
     const S = Math.pow(zoomEnd, u);
-    // a tela do monitor muda de proporção aos poucos até a da tela
+    // a tela do monitor só muda de proporção no fim (até a da tela), quando
+    // já ocupa quase tudo; antes disso ela acompanha o monitor da cena
     const a0 = mon.w / mon.h;
-    const aspect = a0 * Math.pow(W / H / a0, u);
+    const morph = Math.min(1, Math.max(0, (u - 0.75) / 0.25));
+    const aspect = a0 * Math.pow(W / H / a0, morph * morph * (3 - 2 * morph));
     const w = mon.w * S;
     const h = w / aspect;
-    // o monitor vem para o centro
-    const cx = mon.x + (W / 2 - mon.x) * u;
-    const cy = mon.y + (H / 2 - mon.y) * u;
+    // o monitor vem para o centro (a câmera desce e o fundo sobe), chegando
+    // lá um pouco antes do fim da aproximação
+    const c = 1 - Math.pow(1 - Math.min(1, u / HERO_MONITOR.centerBy), 2);
+    const cx = mon.x + (W / 2 - mon.x) * c;
+    const cy = mon.y + (H / 2 - mon.y) * c;
 
     // cena: o ponto do monitor fica preso ao centro da tela do monitor
     if (u > 0) {
@@ -107,6 +111,8 @@ export function Hero({ dive }: Props) {
       const mf = monitorFrame(m);
       const w = el.clientWidth;
       el.style.setProperty("--text-out", f.textOut.toFixed(4));
+      // links do hero deixam de ser clicáveis quando o texto já saiu
+      el.dataset.textOut = f.textOut > 0.5 ? "1" : "0";
       el.style.setProperty("--line-l", `${(f.lineL * w).toFixed(1)}px`);
       el.style.setProperty("--line-r", `${(f.lineR * w).toFixed(1)}px`);
       el.style.setProperty("--line-op", f.lineOpacity.toFixed(4));
@@ -183,6 +189,7 @@ export function Hero({ dive }: Props) {
   return (
     <section
       ref={track}
+      id="inicio"
       className={`${styles.track} ${dive ? "" : styles.still}`}
       aria-label="Início"
       style={{ "--dive": `${diveScrollLength().toFixed(2)}svh` } as CSSProperties}
@@ -234,6 +241,16 @@ export function Hero({ dive }: Props) {
           <div className={styles.exit}>
             <h1 className={styles.name}>{HERO_TEXT.name}</h1>
             <p className={styles.role}>{HERO_TEXT.role}</p>
+            <ul className={styles.links}>
+              {HERO_TEXT.links.map((l) => (
+                <li key={l.label}>
+                  <a href={l.href} target="_blank" rel="noreferrer">
+                    {l.label}
+                    <span aria-hidden="true">↗</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
       </div>

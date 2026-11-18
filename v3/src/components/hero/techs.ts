@@ -21,6 +21,14 @@ import {
   siOpenjdk,
   siPostgresql,
   siPython,
+  siScikitlearn,
+  siTailwindcss,
+  siCloudflare,
+  siDuckdb,
+  siAnthropic,
+  siPytorch,
+  siHuggingface,
+  siTelegram,
   siReact,
   siSpringboot,
   siTypescript,
@@ -28,8 +36,17 @@ import {
 
 // Tecnologias disponíveis para os cartões da espiral. A chave é o que vai em
 // HERO_CONFIG.spiral.items. Ícones: Simple Icons (logos oficiais, licença CC0).
-// gRPC e AWS não existem no Simple Icons; REST não tem logo.
+// gRPC e AWS não existem no Simple Icons: usam ícones genéricos (Material
+// Icons, Apache 2.0) abaixo. REST não tem logo.
 type Icon = { path: string };
+// nuvem
+const iconCloud: Icon = {
+  path: "M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z",
+};
+// setas de ida e volta (chamada e resposta)
+const iconRpc: Icon = {
+  path: "M6.99 11L3 15l3.99 4v-3H14v-2H6.99v-3zM21 9l-3.99-4v3H10v2h7.01v3L21 9z",
+};
 export const TECHS: Record<string, { name: string; icon: Icon }> = {
   react: { name: "React", icon: siReact },
   flutter: { name: "Flutter", icon: siFlutter },
@@ -39,14 +56,24 @@ export const TECHS: Record<string, { name: string; icon: Icon }> = {
   nestjs: { name: "NestJS", icon: siNestjs },
   firebase: { name: "Firebase", icon: siFirebase },
   postgresql: { name: "PostgreSQL", icon: siPostgresql },
+  duckdb: { name: "DuckDB", icon: siDuckdb },
+  anthropic: { name: "Claude", icon: siAnthropic },
   mysql: { name: "MySQL", icon: siMysql },
   typescript: { name: "TypeScript", icon: siTypescript },
+  tailwind: { name: "Tailwind CSS", icon: siTailwindcss },
+  cloudflare: { name: "Cloudflare", icon: siCloudflare },
   javascript: { name: "JavaScript", icon: siJavascript },
   python: { name: "Python", icon: siPython },
+  pytorch: { name: "PyTorch", icon: siPytorch },
+  scikitlearn: { name: "scikit-learn", icon: siScikitlearn },
+  huggingface: { name: "Hugging Face", icon: siHuggingface },
+  telegram: { name: "Telegram", icon: siTelegram },
   java: { name: "Java", icon: siOpenjdk },
   c: { name: "C", icon: siC },
   cpp: { name: "C++", icon: siCplusplus },
   gcp: { name: "Google Cloud", icon: siGooglecloud },
+  aws: { name: "AWS", icon: iconCloud },
+  grpc: { name: "gRPC", icon: iconRpc },
   docker: { name: "Docker", icon: siDocker },
   kubernetes: { name: "Kubernetes", icon: siKubernetes },
   linux: { name: "Linux", icon: siLinux },

@@ -35,7 +35,7 @@ type Props = {
   mode?: "section" | "stage";
   // (stage) posição da foto e do texto, em frações do palco
   onMeasure?: (photo: Rect, text: Rect) => void;
-  // (stage) transição terminou: links clicáveis
+  // (stage) transição terminou: a seção fica interativa
   ready?: boolean;
 };
 
@@ -143,25 +143,6 @@ export function About({ mode = "section", onMeasure, ready = false }: Props) {
           </motion.p>
         ))}
 
-        <motion.dl className={styles.facts} variants={anim ? item : undefined}>
-          {ABOUT.facts.map((f) => (
-            <div key={f.label} className={styles.fact}>
-              <dt>{f.label}</dt>
-              <dd>{f.value}</dd>
-            </div>
-          ))}
-        </motion.dl>
-
-        <motion.ul className={styles.links} variants={anim ? item : undefined}>
-          {ABOUT.links.map((l) => (
-            <li key={l.label}>
-              <a href={l.href} target="_blank" rel="noreferrer" tabIndex={stage && !ready ? -1 : undefined}>
-                {l.label}
-                <span aria-hidden="true">↗</span>
-              </a>
-            </li>
-          ))}
-        </motion.ul>
       </motion.div>
     </section>
   );

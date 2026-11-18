@@ -1,5 +1,4 @@
 // Textos da seção "Sobre mim". Edite à vontade: o layout se ajusta.
-// Itens entre [colchetes] são para você preencher.
 
 import { ABOUT_CONFIG } from "./config";
 
@@ -11,23 +10,11 @@ export const ABOUT = {
   photoAlt: "Foto de Guilherme Silva Dutra",
 
   // Frase de abertura (não precisa repetir o nome: ele já está no hero)
-  title: "Gosto de tirar a IA do notebook e colocar em produção.",
+  title: "Transformo modelos de IA em produtos que as pessoas usam.",
 
   paragraphs: [
-    "Sou engenheiro de IA e trabalho na ponte entre modelos e produto: desenho as APIs, os dados e a infraestrutura que fazem um modelo virar algo que as pessoas realmente usam.",
-    "No dia a dia, isso passa por Python e FastAPI no back-end, TypeScript e React na interface, e Docker, Kubernetes e Google Cloud para colocar tudo de pé.",
-  ],
-
-  // Fatos rápidos, em fonte mono
-  facts: [
-    { label: "Foco", value: "IA aplicada · back-end" },
-    { label: "Base", value: "[sua cidade]" },
-    { label: "Formação", value: "[seu curso]" },
-  ],
-
-  links: [
-    { label: "GitHub", href: "https://github.com/GuiDutra21" },
-    { label: "LinkedIn", href: "#" }, // [seu link]
-    { label: "Currículo", href: "#" }, // [link do PDF]
+    "Sou engenheiro de IA em Brasília e estudo Engenharia de Software na Universidade de Brasília (UnB). Hoje sou residente em Inteligência Artificial no Eldorado, onde construo agentes com RAG e text-to-SQL e faço fine-tuning de modelos de linguagem, sempre medindo cada versão com um framework de avaliação próprio, porque modelo bom é modelo que se prova em números.",
+    "Antes da IA, passei pelo produto de ponta a ponta: no estágio em desenvolvimento fullstack na GM Soluções, evoluí sistemas da ANTT usados em todo o Brasil com React, TypeScript e FastAPI, cuidando do deploy em Kubernetes. Além disso, durante um projeto desenvolvi em Flutter um aplicativo de crédito para uma instituição financeira, da engenharia de requisitos à acessibilidade.",
+    "No meu TCC, pesquiso IA explicável na classificação de lesões de pele, comparando CNNs e Vision Transformers e investigando em quais regiões da imagem cada modelo se apoia para decidir.",
   ],
 };

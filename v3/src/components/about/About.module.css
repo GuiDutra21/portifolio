@@ -22,6 +22,10 @@
   min-height: 0;
   padding-top: clamp(48px, 9vh, 120px);
   padding-bottom: clamp(48px, 9vh, 120px);
+  /* texto (e o mosaico de cartões, que fica sobre ele) mais para a direita,
+     longe do feixe que desce no meio da tela */
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.88fr);
+  column-gap: clamp(48px, 11vw, 200px);
   background: none;
   pointer-events: none;
   /* some na transição para os projetos (--about-out: 0 → 1) */
@@ -114,86 +118,6 @@
   line-height: 1.7;
   color: var(--text-dim);
   text-wrap: pretty;
-}
-
-.facts {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
-  gap: 1.2rem 1.5rem;
-  margin: 2.2rem 0 0;
-  padding-top: 1.4rem;
-  border-top: 1px solid rgb(var(--accent-rgb) / 0.18);
-}
-
-.fact dt {
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  letter-spacing: 0.24em;
-  text-transform: uppercase;
-  color: rgb(var(--accent-rgb) / 0.7);
-}
-
-.fact dd {
-  margin: 0.45rem 0 0;
-  font-size: 0.98rem;
-  color: var(--text);
-}
-
-.links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1.6rem;
-  margin: 2rem 0 0;
-  padding: 0;
-  list-style: none;
-}
-
-.links a {
-  position: relative;
-  display: inline-flex;
-  gap: 0.4em;
-  padding-bottom: 0.3em;
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--text);
-  text-decoration: none;
-  transition: color 0.3s var(--ease);
-}
-
-/* sublinhado dourado que cresce no hover */
-.links a::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 1px;
-  background: var(--accent);
-  transform: scaleX(0.25);
-  transform-origin: left;
-  opacity: 0.6;
-  transition: transform 0.45s var(--ease), opacity 0.3s;
-}
-
-.links a:hover,
-.links a:focus-visible {
-  color: var(--accent);
-}
-
-.links a:hover::after,
-.links a:focus-visible::after {
-  transform: scaleX(1);
-  opacity: 1;
-}
-
-.links span {
-  transition: transform 0.35s var(--ease);
-}
-
-.links a:hover span {
-  transform: translate(2px, -2px);
 }
 
 /* ---------- Celular: foto em cima, texto embaixo ---------- */

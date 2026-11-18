@@ -63,18 +63,31 @@ function splitWeights() {
   return { a, b, slow, total: a + (b - a) * slow + (1 - b) };
 }
 
-// Quanto se rola durante as transições (Sobre + monitor), em % da altura da tela
+// Quanto se rola durante a transição hero → "Sobre", em % da altura da tela
+export function aboutScrollLength() {
+  return HERO_DIVE.length * splitWeights().total;
+}
+
+// Quanto se rola durante as transições (Sobre + pausa + monitor), em % da altura da tela
 export function diveScrollLength() {
-  return HERO_DIVE.length * splitWeights().total + HERO_MONITOR.length;
+  return aboutScrollLength() + HERO_MONITOR.aboutHold + HERO_MONITOR.length;
+}
+
+// Ponto da rolagem (em % da altura da tela, a partir do topo do hero) no meio
+// da pausa do "Sobre": onde o botão "Sobre" do menu para
+export function aboutRestScroll() {
+  return aboutScrollLength() + HERO_MONITOR.aboutHold / 2;
 }
 
 // Rolagem real do trecho preso (0..1) → progresso de cada transição (0..1):
-// p = hero → "Sobre"; m = "Sobre" → projetos (monitor)
+// p = hero → "Sobre"; (pausa: nada muda); m = "Sobre" → projetos (monitor)
 export function scrollToPhases(r: number) {
-  const about = HERO_DIVE.length * splitWeights().total;
-  const x = clamp01(r) * (about + HERO_MONITOR.length);
+  const about = aboutScrollLength();
+  const hold = HERO_MONITOR.aboutHold;
+  const x = clamp01(r) * diveScrollLength();
   if (x <= about) return { p: scrollToProgress(x / about), m: 0 };
-  return { p: 1, m: (x - about) / HERO_MONITOR.length };
+  if (x <= about + hold) return { p: 1, m: 0 };
+  return { p: 1, m: (x - about - hold) / HERO_MONITOR.length };
 }
 
 // Rolagem real (0..1) → progresso da transição (0..1)

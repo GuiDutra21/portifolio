@@ -33,6 +33,12 @@ body {
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
+/* reserva sempre o espaço da barra de rolagem: ao abrir/fechar o painel de um
+   projeto (que trava a rolagem) a página não "pula" para o lado */
+html {
+  scrollbar-gutter: stable;
+}
+
 #root {
   min-height: 100svh;
 }

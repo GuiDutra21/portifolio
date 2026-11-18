@@ -186,6 +186,25 @@
   color: var(--accent);
 }
 
+/* selo "Em construção" (ao lado do número no cartão, acima do título no painel) */
+.status {
+  display: inline-block;
+  margin-left: 0.7rem;
+  padding: 0.2em 0.6em;
+  vertical-align: 0.1em;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+  border: 1px solid rgb(var(--accent-rgb) / 0.45);
+  background: rgb(var(--accent-rgb) / 0.08);
+}
+
+.panelBody > .status {
+  margin: 0 0 0.9rem;
+}
+
 .cardTitle {
   margin: 0.35rem 0 0.4rem;
   font-family: var(--font-display);
@@ -458,4 +477,17 @@
 .close:focus-visible {
   border-color: var(--accent);
   color: var(--accent);
+}
+
+/* projeto sem nenhum link: sem a área (vazia) dos botões */
+.cardLinks:empty,
+.panelLinks:empty {
+  display: none;
+}
+
+/* celular: o menu fixo ocupa o topo inteiro; o título começa abaixo dele */
+@media (max-width: 720px) {
+  .projects {
+    padding-top: 76px;
+  }
 }

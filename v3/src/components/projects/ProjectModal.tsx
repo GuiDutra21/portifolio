@@ -14,10 +14,13 @@ const EASE = [0.2, 0.7, 0.2, 1] as const;
 type Props = {
   project: Project;
   from: DOMRect; // onde estava o cartão clicado
+  // onde o cartão está AGORA (ao fechar, o painel volta para lá, mesmo que o
+  // carrossel tenha terminado de encaixar depois do clique)
+  getFrom?: () => DOMRect | undefined;
   onClose: () => void;
 };
 
-export function ProjectModal({ project, from, onClose }: Props) {
+export function ProjectModal({ project, from, getFrom, onClose }: Props) {
   const reducedMotion = useReducedMotion();
   const panel = useRef<HTMLDivElement>(null);
   const backdrop = useRef<HTMLDivElement>(null);
@@ -26,14 +29,14 @@ export function ProjectModal({ project, from, onClose }: Props) {
   const closing = useRef(false);
 
   // do cartão até o centro: mede o painel já no lugar final e anima a diferença
-  const flipFrom = () => {
+  const flipFrom = (target: DOMRect = from) => {
     const el = panel.current!;
     const to = el.getBoundingClientRect();
     return {
-      x: from.left + from.width / 2 - (to.left + to.width / 2),
-      y: from.top + from.height / 2 - (to.top + to.height / 2),
-      scaleX: from.width / to.width,
-      scaleY: from.height / to.height,
+      x: target.left + target.width / 2 - (to.left + to.width / 2),
+      y: target.top + target.height / 2 - (to.top + to.height / 2),
+      scaleX: target.width / to.width,
+      scaleY: target.height / to.height,
     };
   };
 
@@ -50,10 +53,18 @@ export function ProjectModal({ project, from, onClose }: Props) {
     if (closing.current) return;
     closing.current = true;
     if (!reducedMotion) {
-      const f = flipFrom();
-      animate(body.current!, { opacity: 0 }, { duration: 0.15 });
-      animate(backdrop.current!, { opacity: 0 }, { duration: 0.45 });
-      await animate(panel.current!, { x: f.x, y: f.y, scaleX: f.scaleX, scaleY: f.scaleY }, { duration: 0.5, ease: EASE });
+      const f = flipFrom(getFrom?.() ?? from);
+      const shrink = 0.6;
+      animate(body.current!, { opacity: 0 }, { duration: 0.18 });
+      animate(backdrop.current!, { opacity: 0 }, { duration: shrink, ease: "easeInOut" });
+      // o painel se dissolve no fim da volta, revelando o cartão que já está
+      // embaixo: sem a troca seca de um pelo outro no último quadro
+      animate(panel.current!, { opacity: 0 }, { duration: shrink * 0.45, delay: shrink * 0.55, ease: "easeIn" });
+      await animate(
+        panel.current!,
+        { x: f.x, y: f.y, scaleX: f.scaleX, scaleY: f.scaleY },
+        { duration: shrink, ease: [0.45, 0, 0.2, 1] },
+      );
     }
     onClose();
   };
@@ -81,6 +92,7 @@ export function ProjectModal({ project, from, onClose }: Props) {
           <img src={project.image} alt={project.imageAlt} />
         </div>
         <div ref={body} className={styles.panelBody}>
+          {project.status && <span className={styles.status}>{project.status}</span>}
           <h3 id="project-title" className={styles.panelTitle}>
             {project.title}
           </h3>
@@ -95,12 +107,16 @@ export function ProjectModal({ project, from, onClose }: Props) {
             ))}
           </div>
           <div className={styles.panelLinks}>
-            <a className={styles.primary} href={project.links.live} target="_blank" rel="noreferrer">
-              Acessar projeto <span aria-hidden="true">↗</span>
-            </a>
-            <a className={styles.secondary} href={project.links.code} target="_blank" rel="noreferrer">
-              Ver código <span aria-hidden="true">↗</span>
-            </a>
+            {project.links.live && (
+              <a className={styles.primary} href={project.links.live} target="_blank" rel="noreferrer">
+                Acessar projeto <span aria-hidden="true">↗</span>
+              </a>
+            )}
+            {project.links.code && (
+              <a className={styles.secondary} href={project.links.code} target="_blank" rel="noreferrer">
+                Ver código <span aria-hidden="true">↗</span>
+              </a>
+            )}
           </div>
         </div>
         <button ref={closeBtn} type="button" className={styles.close} onClick={close} aria-label="Fechar">
